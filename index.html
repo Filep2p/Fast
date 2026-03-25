@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>MultiSend | P2P Encrypted Multiple File Transfer</title>
+    <title>StableSend | ACK-based P2P File Transfer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
@@ -49,8 +49,8 @@
 <body>
 <div class="container">
     <div class="hero">
-        <h1>📦 MultiSend</h1>
-        <p>Multiple files • Encrypted P2P • Ultra‑fast • QR connect</p>
+        <h1>📦 StableSend</h1>
+        <p>ACK‑based • Multiple files • Encrypted P2P • No hang</p>
     </div>
 
     <div class="cards-grid">
@@ -96,7 +96,7 @@
             <button id="downloadBtn" style="display:none; width:100%; margin-top:0.8rem;">💾 Decrypt & Save</button>
         </div>
     </div>
-    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 256KB chunks • AES‑256‑GCM • Multi‑file queue</div>
+    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 128KB chunks • ACK flow control • Multi‑file queue</div>
 </div>
 
 <script>
@@ -128,24 +128,22 @@
     let currentConn = null;
     let myId = null;
 
-    // Queue for sending multiple files
-    let selectedFiles = [];  // array of File objects
-    let sendingQueue = [];
+    // For sending multiple files
+    let selectedFiles = [];
     let isSending = false;
 
-    // Receive side: store incoming files per transferId
-    let incomingTransfers = new Map(); // key: transferId, value: { meta, chunks, chunkCount, totalChunks }
+    // For receiving: store incomplete transfers
+    let incomingTransfers = new Map(); // transferId -> { meta, chunks, chunkCount, totalChunks }
 
-    // Chunk size: 256KB stable
-    const CHUNK_SIZE = 256 * 1024;
-    const BUFFER_THRESHOLD = 1 * 1024 * 1024;
+    // Chunk size: 128KB (stable)
+    const CHUNK_SIZE = 128 * 1024;
 
     function genTransferId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
 
     // ---------- PeerJS ----------
     function initPeer(customId = null) {
         if (peer) peer.destroy();
-        const id = customId || ('multi_' + Math.random().toString(36).substring(2, 10));
+        const id = customId || ('stable_' + Math.random().toString(36).substring(2, 10));
         peer = new Peer(id, {
             debug: 0,
             config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
@@ -207,12 +205,11 @@
         });
     }
 
-    // Handle incoming messages (fileStart, fileChunk)
+    // Handle incoming messages (fileStart, fileChunk, ack)
     async function handleIncoming(msg) {
         if (!msg.type) return;
         switch (msg.type) {
             case 'fileStart':
-                // Prepare for new file
                 const transferId = msg.transferId;
                 const meta = {
                     fileName: msg.fileName,
@@ -227,7 +224,6 @@
                     chunks: new Array(msg.totalChunks),
                     chunkCount: 0
                 });
-                // Update UI
                 receiveInfo.innerText = `📥 Receiving: ${msg.fileName} (${(msg.fileSize / 1024 / 1024).toFixed(2)} MB)`;
                 receiveStatus.innerText = `0 / ${msg.totalChunks} chunks`;
                 receiveProgressFill.style.width = '0%';
@@ -241,16 +237,21 @@
                     const percent = (transfer.chunkCount / transfer.meta.totalChunks) * 100;
                     receiveProgressFill.style.width = percent + '%';
                     receiveStatus.innerText = `${transfer.chunkCount} / ${transfer.meta.totalChunks} chunks`;
+                    
+                    // Send ACK for this chunk
+                    currentConn.send({
+                        type: 'chunkAck',
+                        transferId: msg.transferId,
+                        chunkIndex: msg.chunkIndex
+                    });
+
                     if (transfer.chunkCount === transfer.meta.totalChunks) {
-                        // All chunks received, reassemble and decrypt
                         await reassembleAndDecrypt(transfer);
                         incomingTransfers.delete(msg.transferId);
-                        // Show next waiting file if any
                         if (incomingTransfers.size === 0) {
                             receiveInfo.innerText = 'All files received.';
                             receiveStatus.innerText = 'Ready';
                         } else {
-                            // Show next file info (optional)
                             const next = incomingTransfers.values().next().value;
                             if (next) {
                                 receiveInfo.innerText = `📥 Next: ${next.meta.fileName} (${(next.meta.fileSize / 1024 / 1024).toFixed(2)} MB)`;
@@ -259,13 +260,21 @@
                     }
                 }
                 break;
+
+            case 'chunkAck':
+                // Handle ACK: resolve pending promise in sender
+                if (pendingAcks.has(msg.transferId) && pendingAcks.get(msg.transferId).has(msg.chunkIndex)) {
+                    const resolver = pendingAcks.get(msg.transferId).get(msg.chunkIndex);
+                    if (resolver) resolver();
+                    pendingAcks.get(msg.transferId).delete(msg.chunkIndex);
+                }
+                break;
         }
     }
 
     async function reassembleAndDecrypt(transfer) {
         const { meta, chunks } = transfer;
         receiveStatus.innerText = 'Reassembling & decrypting...';
-        // Merge chunks
         let totalLen = 0;
         for (let i = 0; i < chunks.length; i++) totalLen += chunks[i].length;
         const encrypted = new Uint8Array(totalLen);
@@ -283,7 +292,6 @@
             );
             const blob = new Blob([decrypted], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
-            // Add download button for this file
             const fileName = meta.fileName;
             const downloadItem = document.createElement('div');
             downloadItem.style.background = '#1e293b';
@@ -314,30 +322,24 @@
         }
     }
 
-    // ---- Send multiple files with queue ----
-    async function sendWithBackpressure(conn, chunkData, transferId, chunkIndex) {
+    // Sender side with ACK per chunk
+    let pendingAcks = new Map(); // transferId -> Map(chunkIndex -> resolver)
+
+    function waitForAck(transferId, chunkIndex, timeout = 10000) {
         return new Promise((resolve, reject) => {
-            const sendChunk = () => {
-                if (conn.bufferedAmount < BUFFER_THRESHOLD) {
-                    conn.send({
-                        type: 'fileChunk',
-                        transferId: transferId,
-                        chunkIndex: chunkIndex,
-                        data: Array.from(chunkData)
-                    });
-                    resolve();
-                } else {
-                    setTimeout(sendChunk, 10);
+            if (!pendingAcks.has(transferId)) pendingAcks.set(transferId, new Map());
+            pendingAcks.get(transferId).set(chunkIndex, resolve);
+            setTimeout(() => {
+                if (pendingAcks.has(transferId) && pendingAcks.get(transferId).has(chunkIndex)) {
+                    pendingAcks.get(transferId).delete(chunkIndex);
+                    reject(new Error('ACK timeout'));
                 }
-            };
-            sendChunk();
+            }, timeout);
         });
     }
 
     async function sendOneFile(file, fileIndex, totalFiles) {
-        if (!currentConn || !currentConn.open) {
-            throw new Error('Not connected');
-        }
+        if (!currentConn || !currentConn.open) throw new Error('Not connected');
         sendStatus.innerText = `Encrypting ${file.name}...`;
         const fileBuffer = await file.arrayBuffer();
         const data = new Uint8Array(fileBuffer);
@@ -352,7 +354,7 @@
         const totalChunks = Math.ceil(encryptedData.length / CHUNK_SIZE);
         const transferId = genTransferId();
 
-        // send metadata
+        // Send fileStart
         currentConn.send({
             type: 'fileStart',
             fileName: file.name,
@@ -370,13 +372,23 @@
             const start = i * CHUNK_SIZE;
             const end = Math.min(start + CHUNK_SIZE, encryptedData.length);
             const chunk = encryptedData.slice(start, end);
-            await sendWithBackpressure(currentConn, chunk, transferId, i);
+            // Send chunk
+            currentConn.send({
+                type: 'fileChunk',
+                transferId: transferId,
+                chunkIndex: i,
+                data: Array.from(chunk)
+            });
+            // Wait for ACK
+            await waitForAck(transferId, i);
             const percent = ((i + 1) / totalChunks) * 100;
             sendProgressFill.style.width = percent + '%';
             sendStatus.innerText = `${file.name} ${i+1}/${totalChunks} chunks (${Math.round(percent)}%)`;
         }
+        // Clean up pending acks for this transfer
+        pendingAcks.delete(transferId);
         sendStatus.innerText = `✅ ${file.name} sent!`;
-        await new Promise(r => setTimeout(r, 100)); // small gap between files
+        await new Promise(r => setTimeout(r, 100));
     }
 
     async function sendAllFiles() {
@@ -389,11 +401,16 @@
         isSending = true;
         sendBtn.disabled = true;
         for (let i = 0; i < selectedFiles.length; i++) {
-            await sendOneFile(selectedFiles[i], i, selectedFiles.length);
+            try {
+                await sendOneFile(selectedFiles[i], i, selectedFiles.length);
+            } catch (err) {
+                console.error(err);
+                sendStatus.innerText = `Error sending ${selectedFiles[i].name}: ${err.message}`;
+                break;
+            }
         }
         sendStatus.innerText = `✅ All ${selectedFiles.length} files sent!`;
         isSending = false;
-        // Clear selected files
         selectedFiles = [];
         updateFileListUI();
         updateSendButtonState();
@@ -420,7 +437,6 @@
                 <button class="remove-file" data-index="${idx}">✖</button>
             </div>
         `).join('');
-        // attach remove events
         document.querySelectorAll('.remove-file').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -459,6 +475,7 @@
         receiveStatus.innerText = '—';
         downloadBtn.style.display = 'none';
         incomingTransfers.clear();
+        pendingAcks.clear();
     }
 
     // Drag & drop for multiple files
@@ -478,7 +495,7 @@
         });
     }
 
-    // QR scanner (unchanged, robust)
+    // QR scanner
     let html5QrCode = null;
     function startQrScanner() {
         const overlay = document.createElement('div');
