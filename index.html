@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>HyperCrypt | Ultimate Speed P2P File Transfer</title>
+    <title>MultiSend | P2P Encrypted Multiple File Transfer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at 20% 30%, #0b0e1a, #03050c);
@@ -21,176 +17,43 @@
             padding: clamp(0.8rem, 4vw, 2rem);
             color: #eef5ff;
         }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-        .hero {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .hero h1 {
-            font-size: clamp(1.8rem, 6vw, 2.8rem);
-            background: linear-gradient(135deg, #c084fc, #60a5fa, #f472b6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 700;
-        }
-        .hero p {
-            color: #94a3b8;
-            font-size: clamp(0.8rem, 3vw, 1rem);
-        }
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .card {
-            background: rgba(15, 20, 35, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 1.8rem;
-            border: 1px solid rgba(96, 165, 250, 0.25);
-            padding: 1.4rem;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-        .card:hover {
-            border-color: #818cf8;
-            transform: translateY(-3px);
-        }
-        .card-title {
-            font-size: clamp(1.1rem, 4vw, 1.3rem);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .peer-id-box {
-            background: #0a0e1c;
-            border-radius: 1rem;
-            padding: 0.7rem;
-            font-family: monospace;
-            word-break: break-all;
-            border: 1px solid #2d3a5e;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        button {
-            background: linear-gradient(95deg, #2d3a6e, #1e2a4a);
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 2rem;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: clamp(0.75rem, 3vw, 0.9rem);
-        }
-        button.primary {
-            background: linear-gradient(95deg, #4f46e5, #7c3aed);
-            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
-        }
-        button.primary:hover {
-            transform: scale(0.98);
-            box-shadow: 0 6px 16px rgba(79,70,229,0.4);
-        }
-        input, .file-dropzone {
-            background: #0a0e1c;
-            border: 1px solid #2d3a5e;
-            border-radius: 1.5rem;
-            padding: 0.7rem 1rem;
-            width: 100%;
-            color: white;
-            font-family: inherit;
-            font-size: clamp(0.8rem, 3vw, 0.9rem);
-        }
-        .file-dropzone {
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .file-dropzone.drag-over {
-            border-color: #a78bfa;
-            background: #1e1f3a;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #1e293b;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 0.6rem 0;
-        }
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #60a5fa, #c084fc);
-            transition: width 0.2s;
-        }
-        .status-badge {
-            font-size: 0.7rem;
-            background: #0f1422;
-            padding: 0.2rem 0.8rem;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 0.5rem;
-        }
-        .qr-area {
-            display: flex;
-            justify-content: center;
-            margin: 0.8rem 0;
-        }
-        canvas#qrCanvas {
-            background: white;
-            padding: 8px;
-            border-radius: 20px;
-            width: 140px;
-            height: 140px;
-        }
-        .watermark {
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 0.75rem;
-            opacity: 0.6;
-            font-family: monospace;
-            color: #b9c3ff;
-        }
-        .flex-row {
-            display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        @media (max-width: 700px) {
-            .flex-row { flex-direction: column; }
-            .flex-row button { width: 100%; }
-        }
-        /* scanner modal responsive */
-        #qr-reader {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1300px; margin: 0 auto; }
+        .hero { text-align: center; margin-bottom: 2rem; }
+        .hero h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); background: linear-gradient(135deg, #c084fc, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
+        .hero p { color: #94a3b8; font-size: clamp(0.8rem, 3vw, 1rem); }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: rgba(15, 20, 35, 0.7); backdrop-filter: blur(12px); border-radius: 1.8rem; border: 1px solid rgba(96, 165, 250, 0.25); padding: 1.4rem; transition: transform 0.2s, border-color 0.2s; }
+        .card:hover { border-color: #818cf8; transform: translateY(-3px); }
+        .card-title { font-size: clamp(1.1rem, 4vw, 1.3rem); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .peer-id-box { background: #0a0e1c; border-radius: 1rem; padding: 0.7rem; font-family: monospace; word-break: break-all; border: 1px solid #2d3a5e; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        button { background: linear-gradient(95deg, #2d3a6e, #1e2a4a); border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; font-weight: 600; color: white; cursor: pointer; transition: all 0.2s; font-family: inherit; display: inline-flex; align-items: center; gap: 0.5rem; font-size: clamp(0.75rem, 3vw, 0.9rem); }
+        button.primary { background: linear-gradient(95deg, #4f46e5, #7c3aed); box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+        button.primary:hover { transform: scale(0.98); box-shadow: 0 6px 16px rgba(79,70,229,0.4); }
+        input, .file-dropzone { background: #0a0e1c; border: 1px solid #2d3a5e; border-radius: 1.5rem; padding: 0.7rem 1rem; width: 100%; color: white; font-family: inherit; font-size: clamp(0.8rem, 3vw, 0.9rem); }
+        .file-dropzone { text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 0.8rem; }
+        .file-dropzone.drag-over { border-color: #a78bfa; background: #1e1f3a; }
+        .file-list { max-height: 200px; overflow-y: auto; margin: 0.8rem 0; font-size: 0.75rem; background: #0a0e1c; border-radius: 1rem; padding: 0.5rem; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0.5rem; border-bottom: 1px solid #2d3a5e; }
+        .file-item button { background: #ff4d4d; padding: 0.2rem 0.6rem; font-size: 0.7rem; }
+        .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 10px; overflow: hidden; margin: 0.6rem 0; }
+        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #60a5fa, #c084fc); transition: width 0.2s; }
+        .status-badge { font-size: 0.7rem; background: #0f1422; padding: 0.2rem 0.8rem; border-radius: 20px; display: inline-block; margin-top: 0.5rem; }
+        .qr-area { display: flex; justify-content: center; margin: 0.8rem 0; }
+        canvas#qrCanvas { background: white; padding: 8px; border-radius: 20px; width: 140px; height: 140px; }
+        .watermark { text-align: center; margin-top: 2rem; font-size: 0.75rem; opacity: 0.6; font-family: monospace; color: #b9c3ff; }
+        .flex-row { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; }
+        @media (max-width: 700px) { .flex-row { flex-direction: column; } .flex-row button { width: 100%; } }
+        #qr-reader { width: 100%; max-width: 400px; margin: 0 auto; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="hero">
-        <h1>⚡ HyperCrypt</h1>
-        <p>Maximum speed • Encrypted P2P • QR connect • No limits</p>
+        <h1>📦 MultiSend</h1>
+        <p>Multiple files • Encrypted P2P • Ultra‑fast • QR connect</p>
     </div>
 
     <div class="cards-grid">
-        <!-- Identity + QR -->
         <div class="card">
             <div class="card-title">🆔 Your ID & QR</div>
             <div class="peer-id-box">
@@ -202,7 +65,6 @@
             <div class="status-badge" id="connStatus">⚡ Not connected</div>
         </div>
 
-        <!-- Connect: manual + QR scanner -->
         <div class="card">
             <div class="card-title">🔌 Connect to Peer</div>
             <div class="flex-row">
@@ -213,33 +75,32 @@
             <div id="connFeedback" class="status-badge"></div>
         </div>
 
-        <!-- Send file panel -->
         <div class="card" id="sendCard" style="display: none;">
-            <div class="card-title">📤 Send File</div>
+            <div class="card-title">📤 Send Files</div>
             <div id="dropzone" class="file-dropzone">
-                📁 Click or drag file here
-                <input type="file" id="fileInput" style="display:none;">
+                📁 Click or drag files here (multiple allowed)
+                <input type="file" id="fileInput" multiple style="display:none;">
             </div>
-            <div id="filePreview" style="font-size:0.75rem; margin:0.5rem 0;"></div>
+            <div id="fileListContainer" class="file-list" style="display: none;"></div>
             <div class="progress-bar"><div class="progress-fill" id="sendProgressFill"></div></div>
-            <div id="sendStatus" class="status-badge">No file selected</div>
-            <button id="sendBtn" class="primary" style="width:100%; margin-top:0.8rem;" disabled>🚀 Encrypt & Send</button>
+            <div id="sendStatus" class="status-badge">No files selected</div>
+            <button id="sendBtn" class="primary" style="width:100%; margin-top:0.8rem;" disabled>🚀 Send All Files</button>
         </div>
 
-        <!-- Receive panel -->
         <div class="card" id="receiveCard" style="display: none;">
-            <div class="card-title">📥 Incoming Transfer</div>
-            <div id="receiveInfo">Waiting for file...</div>
+            <div class="card-title">📥 Incoming Transfers</div>
+            <div id="receiveInfo">Waiting for files...</div>
+            <div id="receiveQueue" style="font-size:0.7rem; margin-top:0.5rem;"></div>
             <div class="progress-bar"><div class="progress-fill" id="receiveProgressFill"></div></div>
             <div id="receiveStatus" class="status-badge">—</div>
             <button id="downloadBtn" style="display:none; width:100%; margin-top:0.8rem;">💾 Decrypt & Save</button>
         </div>
     </div>
-    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 1MB chunks • AES‑256‑GCM • Ultra‑fast P2P</div>
+    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 256KB chunks • AES‑256‑GCM • Multi‑file queue</div>
 </div>
 
 <script>
-    // ---------- DOM elements ----------
+    // DOM elements
     const myPeerIdSpan = document.getElementById('myPeerId');
     const copyIdBtn = document.getElementById('copyIdBtn');
     const newIdBtn = document.getElementById('newIdBtn');
@@ -252,37 +113,39 @@
     const receiveCard = document.getElementById('receiveCard');
     const fileInput = document.getElementById('fileInput');
     const dropzone = document.getElementById('dropzone');
-    const filePreview = document.getElementById('filePreview');
+    const fileListContainer = document.getElementById('fileListContainer');
     const sendBtn = document.getElementById('sendBtn');
     const sendProgressFill = document.getElementById('sendProgressFill');
     const sendStatus = document.getElementById('sendStatus');
     const receiveInfo = document.getElementById('receiveInfo');
+    const receiveQueue = document.getElementById('receiveQueue');
     const receiveProgressFill = document.getElementById('receiveProgressFill');
     const receiveStatus = document.getElementById('receiveStatus');
     const downloadBtn = document.getElementById('downloadBtn');
     const qrContainer = document.getElementById('qrContainer');
 
-    // ---------- globals ----------
     let peer = null;
     let currentConn = null;
     let myId = null;
 
-    // transfer state
-    let incomingMeta = null;
-    let incomingChunks = [];
-    let incomingChunkCount = 0;
-    let activeTransferId = null;
+    // Queue for sending multiple files
+    let selectedFiles = [];  // array of File objects
+    let sendingQueue = [];
+    let isSending = false;
 
-    // CHUNK SIZE: 1MB (1048576 bytes) — maximum safe for WebRTC
-    const CHUNK_SIZE = 1024 * 1024;  // 1 MB chunks = ultra speed
+    // Receive side: store incoming files per transferId
+    let incomingTransfers = new Map(); // key: transferId, value: { meta, chunks, chunkCount, totalChunks }
 
-    // helper: generate transfer ID
+    // Chunk size: 256KB stable
+    const CHUNK_SIZE = 256 * 1024;
+    const BUFFER_THRESHOLD = 1 * 1024 * 1024;
+
     function genTransferId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
 
-    // ---------- PeerJS init ----------
+    // ---------- PeerJS ----------
     function initPeer(customId = null) {
         if (peer) peer.destroy();
-        const id = customId || ('hyper_' + Math.random().toString(36).substring(2, 10));
+        const id = customId || ('multi_' + Math.random().toString(36).substring(2, 10));
         peer = new Peer(id, {
             debug: 0,
             config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
@@ -306,7 +169,6 @@
         });
     }
 
-    // generate QR using QRious
     function generateQR(text) {
         qrContainer.innerHTML = '';
         const qr = new QRious({
@@ -319,7 +181,6 @@
         qrContainer.appendChild(qr.canvas);
     }
 
-    // setup data channel (optimized for speed)
     function setupConnection(conn) {
         if (currentConn && currentConn.open) currentConn.close();
         currentConn = conn;
@@ -330,8 +191,8 @@
 
         conn.on('open', () => {
             connStatusSpan.innerHTML = `🔗 Connected to ${conn.peer}`;
-            connFeedback.innerHTML = '✅ Connected! Ready to send files.';
-            sendBtn.disabled = false;
+            connFeedback.innerHTML = '✅ Connected! You can send multiple files.';
+            updateSendButtonState();
         });
 
         conn.on('data', async (data) => {
@@ -346,79 +207,106 @@
         });
     }
 
-    // handle incoming protocol messages
+    // Handle incoming messages (fileStart, fileChunk)
     async function handleIncoming(msg) {
         if (!msg.type) return;
         switch (msg.type) {
             case 'fileStart':
-                resetReceiveUI();
-                incomingMeta = {
+                // Prepare for new file
+                const transferId = msg.transferId;
+                const meta = {
                     fileName: msg.fileName,
                     fileSize: msg.fileSize,
                     totalChunks: msg.totalChunks,
                     key: new Uint8Array(msg.key),
                     iv: new Uint8Array(msg.iv),
-                    transferId: msg.transferId
+                    transferId: transferId
                 };
-                activeTransferId = msg.transferId;
-                incomingChunks = new Array(msg.totalChunks);
-                incomingChunkCount = 0;
+                incomingTransfers.set(transferId, {
+                    meta: meta,
+                    chunks: new Array(msg.totalChunks),
+                    chunkCount: 0
+                });
+                // Update UI
                 receiveInfo.innerText = `📥 Receiving: ${msg.fileName} (${(msg.fileSize / 1024 / 1024).toFixed(2)} MB)`;
                 receiveStatus.innerText = `0 / ${msg.totalChunks} chunks`;
                 receiveProgressFill.style.width = '0%';
                 break;
 
             case 'fileChunk':
-                if (activeTransferId === msg.transferId && incomingMeta) {
-                    incomingChunks[msg.chunkIndex] = new Uint8Array(msg.data);
-                    incomingChunkCount++;
-                    const percent = (incomingChunkCount / incomingMeta.totalChunks) * 100;
+                const transfer = incomingTransfers.get(msg.transferId);
+                if (transfer) {
+                    transfer.chunks[msg.chunkIndex] = new Uint8Array(msg.data);
+                    transfer.chunkCount++;
+                    const percent = (transfer.chunkCount / transfer.meta.totalChunks) * 100;
                     receiveProgressFill.style.width = percent + '%';
-                    receiveStatus.innerText = `${incomingChunkCount} / ${incomingMeta.totalChunks} chunks`;
-                    if (incomingChunkCount === incomingMeta.totalChunks) {
-                        await reassembleAndDecrypt();
+                    receiveStatus.innerText = `${transfer.chunkCount} / ${transfer.meta.totalChunks} chunks`;
+                    if (transfer.chunkCount === transfer.meta.totalChunks) {
+                        // All chunks received, reassemble and decrypt
+                        await reassembleAndDecrypt(transfer);
+                        incomingTransfers.delete(msg.transferId);
+                        // Show next waiting file if any
+                        if (incomingTransfers.size === 0) {
+                            receiveInfo.innerText = 'All files received.';
+                            receiveStatus.innerText = 'Ready';
+                        } else {
+                            // Show next file info (optional)
+                            const next = incomingTransfers.values().next().value;
+                            if (next) {
+                                receiveInfo.innerText = `📥 Next: ${next.meta.fileName} (${(next.meta.fileSize / 1024 / 1024).toFixed(2)} MB)`;
+                            }
+                        }
                     }
                 }
                 break;
         }
     }
 
-    async function reassembleAndDecrypt() {
-        if (!incomingMeta) return;
+    async function reassembleAndDecrypt(transfer) {
+        const { meta, chunks } = transfer;
         receiveStatus.innerText = 'Reassembling & decrypting...';
-        // merge chunks
+        // Merge chunks
         let totalLen = 0;
-        for (let i = 0; i < incomingChunks.length; i++) totalLen += incomingChunks[i].length;
+        for (let i = 0; i < chunks.length; i++) totalLen += chunks[i].length;
         const encrypted = new Uint8Array(totalLen);
         let offset = 0;
-        for (let i = 0; i < incomingChunks.length; i++) {
-            encrypted.set(incomingChunks[i], offset);
-            offset += incomingChunks[i].length;
+        for (let i = 0; i < chunks.length; i++) {
+            encrypted.set(chunks[i], offset);
+            offset += chunks[i].length;
         }
         try {
             const cryptoKey = await window.crypto.subtle.importKey(
-                'raw', incomingMeta.key, { name: 'AES-GCM' }, false, ['decrypt']
+                'raw', meta.key, { name: 'AES-GCM' }, false, ['decrypt']
             );
             const decrypted = await window.crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv: incomingMeta.iv }, cryptoKey, encrypted
+                { name: 'AES-GCM', iv: meta.iv }, cryptoKey, encrypted
             );
             const blob = new Blob([decrypted], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
-            downloadBtn.onclick = () => {
+            // Add download button for this file
+            const fileName = meta.fileName;
+            const downloadItem = document.createElement('div');
+            downloadItem.style.background = '#1e293b';
+            downloadItem.style.borderRadius = '1rem';
+            downloadItem.style.padding = '0.5rem';
+            downloadItem.style.margin = '0.5rem 0';
+            downloadItem.innerHTML = `<span>📄 ${fileName}</span> <button class="download-single" data-url="${url}" data-name="${fileName}">💾 Save</button>`;
+            receiveQueue.appendChild(downloadItem);
+            downloadItem.querySelector('.download-single').addEventListener('click', () => {
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = incomingMeta.fileName;
+                a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                receiveInfo.innerText = `✅ Saved: ${incomingMeta.fileName}`;
-                downloadBtn.style.display = 'none';
-                resetReceiveUI();
-            };
-            downloadBtn.style.display = 'block';
-            receiveInfo.innerText = `✨ Ready: ${incomingMeta.fileName}`;
-            receiveStatus.innerText = 'Decryption complete.';
+                downloadItem.remove();
+                if (receiveQueue.children.length === 0) {
+                    receiveInfo.innerText = 'All files downloaded.';
+                }
+            });
+            receiveInfo.innerText = `✅ Received: ${fileName}`;
+            receiveStatus.innerText = 'Ready for download';
         } catch (e) {
             console.error(e);
             receiveInfo.innerText = '❌ Decryption failed';
@@ -426,19 +314,36 @@
         }
     }
 
-    // send file with high-speed chunking
-    async function encryptAndSendFile(file) {
+    // ---- Send multiple files with queue ----
+    async function sendWithBackpressure(conn, chunkData, transferId, chunkIndex) {
+        return new Promise((resolve, reject) => {
+            const sendChunk = () => {
+                if (conn.bufferedAmount < BUFFER_THRESHOLD) {
+                    conn.send({
+                        type: 'fileChunk',
+                        transferId: transferId,
+                        chunkIndex: chunkIndex,
+                        data: Array.from(chunkData)
+                    });
+                    resolve();
+                } else {
+                    setTimeout(sendChunk, 10);
+                }
+            };
+            sendChunk();
+        });
+    }
+
+    async function sendOneFile(file, fileIndex, totalFiles) {
         if (!currentConn || !currentConn.open) {
-            sendStatus.innerText = '❌ Not connected';
-            return;
+            throw new Error('Not connected');
         }
-        sendStatus.innerText = 'Reading file...';
+        sendStatus.innerText = `Encrypting ${file.name}...`;
         const fileBuffer = await file.arrayBuffer();
         const data = new Uint8Array(fileBuffer);
 
         const key = await window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
-        sendStatus.innerText = 'Encrypting (AES-256-GCM)...';
         const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
         const encryptedData = new Uint8Array(encrypted);
         const rawKey = await window.crypto.subtle.exportKey('raw', key);
@@ -458,48 +363,105 @@
             transferId: transferId
         });
 
-        sendStatus.innerText = `Sending ${totalChunks} chunks (1MB each)...`;
+        sendStatus.innerText = `Sending ${file.name} (${fileIndex+1}/${totalFiles})...`;
         sendProgressFill.style.width = '0%';
 
-        // send chunks without any delay
         for (let i = 0; i < totalChunks; i++) {
             const start = i * CHUNK_SIZE;
             const end = Math.min(start + CHUNK_SIZE, encryptedData.length);
             const chunk = encryptedData.slice(start, end);
-            currentConn.send({
-                type: 'fileChunk',
-                transferId: transferId,
-                chunkIndex: i,
-                data: Array.from(chunk)
-            });
+            await sendWithBackpressure(currentConn, chunk, transferId, i);
             const percent = ((i + 1) / totalChunks) * 100;
             sendProgressFill.style.width = percent + '%';
-            sendStatus.innerText = `Sent ${i+1}/${totalChunks} chunks (${Math.round(percent)}%)`;
+            sendStatus.innerText = `${file.name} ${i+1}/${totalChunks} chunks (${Math.round(percent)}%)`;
         }
-        sendStatus.innerText = '✅ Transfer complete!';
-        setTimeout(() => sendStatus.innerText = 'Ready', 2000);
+        sendStatus.innerText = `✅ ${file.name} sent!`;
+        await new Promise(r => setTimeout(r, 100)); // small gap between files
     }
 
-    // UI reset
-    function resetSendUI() {
-        sendProgressFill.style.width = '0%';
-        sendStatus.innerText = 'No file selected';
+    async function sendAllFiles() {
+        if (selectedFiles.length === 0) return;
+        if (!currentConn || !currentConn.open) {
+            sendStatus.innerText = '❌ Not connected';
+            return;
+        }
+        if (isSending) return;
+        isSending = true;
         sendBtn.disabled = true;
-        filePreview.innerText = '';
-        if (fileInput) fileInput.value = '';
+        for (let i = 0; i < selectedFiles.length; i++) {
+            await sendOneFile(selectedFiles[i], i, selectedFiles.length);
+        }
+        sendStatus.innerText = `✅ All ${selectedFiles.length} files sent!`;
+        isSending = false;
+        // Clear selected files
+        selectedFiles = [];
+        updateFileListUI();
+        updateSendButtonState();
+        sendBtn.disabled = false;
     }
+
+    // UI for file selection
+    function handleFilesSelected(files) {
+        selectedFiles = Array.from(files);
+        updateFileListUI();
+        updateSendButtonState();
+    }
+
+    function updateFileListUI() {
+        if (selectedFiles.length === 0) {
+            fileListContainer.style.display = 'none';
+            fileListContainer.innerHTML = '';
+            return;
+        }
+        fileListContainer.style.display = 'block';
+        fileListContainer.innerHTML = selectedFiles.map((file, idx) => `
+            <div class="file-item">
+                <span>📄 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</span>
+                <button class="remove-file" data-index="${idx}">✖</button>
+            </div>
+        `).join('');
+        // attach remove events
+        document.querySelectorAll('.remove-file').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                selectedFiles.splice(idx, 1);
+                updateFileListUI();
+                updateSendButtonState();
+                e.stopPropagation();
+            });
+        });
+    }
+
+    function updateSendButtonState() {
+        if (selectedFiles.length > 0 && currentConn && currentConn.open) {
+            sendBtn.disabled = false;
+            sendStatus.innerText = `${selectedFiles.length} file(s) ready`;
+        } else {
+            sendBtn.disabled = true;
+            if (selectedFiles.length === 0) sendStatus.innerText = 'No files selected';
+            else if (!currentConn || !currentConn.open) sendStatus.innerText = 'Not connected';
+        }
+    }
+
+    function resetSendUI() {
+        selectedFiles = [];
+        updateFileListUI();
+        sendProgressFill.style.width = '0%';
+        sendStatus.innerText = 'No files selected';
+        sendBtn.disabled = true;
+        fileInput.value = '';
+    }
+
     function resetReceiveUI() {
-        receiveInfo.innerText = 'Waiting for file...';
+        receiveInfo.innerText = 'Waiting for files...';
+        receiveQueue.innerHTML = '';
         receiveProgressFill.style.width = '0%';
         receiveStatus.innerText = '—';
         downloadBtn.style.display = 'none';
-        incomingChunks = [];
-        incomingMeta = null;
-        activeTransferId = null;
-        incomingChunkCount = 0;
+        incomingTransfers.clear();
     }
 
-    // Drag & drop + file selection
+    // Drag & drop for multiple files
     function setupDragDrop() {
         dropzone.addEventListener('click', () => fileInput.click());
         dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
@@ -507,24 +469,18 @@
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('drag-over');
-            if (e.dataTransfer.files.length) handleFileSelected(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files.length) {
+                handleFilesSelected(e.dataTransfer.files);
+            }
         });
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFileSelected(e.target.files[0]);
+            if (e.target.files.length) handleFilesSelected(e.target.files);
         });
     }
-    function handleFileSelected(file) {
-        if (!file) return;
-        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        filePreview.innerText = `📁 ${file.name} (${sizeMB} MB)`;
-        sendBtn.disabled = false;
-        window.selectedFile = file;
-    }
 
-    // QR scanning with robust error handling
+    // QR scanner (unchanged, robust)
     let html5QrCode = null;
     function startQrScanner() {
-        // Create modal overlay
         const overlay = document.createElement('div');
         overlay.style.position = 'fixed';
         overlay.style.top = '0';
@@ -568,17 +524,12 @@
         html5QrCode = new Html5Qrcode("qr-reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-            // success
             remoteIdInput.value = decodedText;
             html5QrCode.stop().then(() => {
                 overlay.remove();
-                // auto connect
                 connectToPeer(decodedText);
             }).catch(console.warn);
-        }, (err) => {
-            // scanning error, ignore for now
-            console.warn(err);
-        }).catch((err) => {
+        }, (err) => { console.warn(err); }).catch((err) => {
             console.error('Camera start failed', err);
             connFeedback.innerHTML = '❌ Camera access failed. Please allow camera permissions and retry.';
             overlay.remove();
@@ -593,7 +544,7 @@
         connFeedback.innerHTML = `⏳ Connecting to ${peerId} ...`;
     }
 
-    // event listeners
+    // Event listeners
     copyIdBtn.addEventListener('click', () => {
         if (myId) { navigator.clipboard.writeText(myId); copyIdBtn.innerText = '✓ Copied!'; setTimeout(() => copyIdBtn.innerText = '📋 Copy', 1500); }
     });
@@ -601,17 +552,11 @@
     connectBtn.addEventListener('click', () => { const rid = remoteIdInput.value.trim(); if (rid) connectToPeer(rid); else connFeedback.innerHTML = '❌ Enter ID'; });
     scanQrBtn.addEventListener('click', startQrScanner);
     sendBtn.addEventListener('click', async () => {
-        if (!window.selectedFile) { sendStatus.innerText = 'Select a file first'; return; }
+        if (selectedFiles.length === 0) { sendStatus.innerText = 'Select files first'; return; }
         if (!currentConn || !currentConn.open) { sendStatus.innerText = 'Not connected'; return; }
-        sendBtn.disabled = true;
-        await encryptAndSendFile(window.selectedFile);
-        sendBtn.disabled = false;
-        window.selectedFile = null;
-        fileInput.value = '';
-        filePreview.innerText = '';
+        await sendAllFiles();
     });
 
-    // start
     initPeer();
     setupDragDrop();
 </script>
