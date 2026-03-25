@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CryptoSend | P2P Encrypted File Transfer</title>
+    <!-- Google Fonts & PeerJS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 20%, #0b0e1a, #03050c);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            color: #edf2ff;
+        }
+
+        /* animated background glow */
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle at 30% 40%, rgba(79, 70, 229, 0.08), transparent 70%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* header */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #c084fc, #60a5fa, #f472b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            animation: fadeSlideUp 0.8s ease-out;
+        }
+        .hero p {
+            color: #94a3b8;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        /* cards grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(15, 20, 35, 0.65);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+        }
+        .card:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+            transform: translateY(-4px);
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+            color: #e2e8ff;
+        }
+
+        .peer-id-box {
+            background: #0a0e1c;
+            border-radius: 1.2rem;
+            padding: 0.8rem 1rem;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            border: 1px solid #2d3a5e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(95deg, #2d3a6e, #1e2a4a);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #f0f3ff;
+            cursor: pointer;
+            transition: 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: inherit;
+            backdrop-filter: blur(4px);
+        }
+        button.primary {
+            background: linear-gradient(95deg, #4f46e5, #7c3aed);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        button.primary:hover {
+            transform: scale(0.98);
+            background: linear-gradient(95deg, #6366f1, #8b5cf6);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+        button:active {
+            transform: scale(0.96);
+        }
+
+        input, .file-dropzone {
+            background: #0a0e1c;
+            border: 1px solid #2d3a5e;
+            border-radius: 1.5rem;
+            padding: 0.7rem 1rem;
+            width: 100%;
+            color: white;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
+        }
+
+        .file-dropzone {
+            text-align: center;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: 0.2s;
+        }
+        .file-dropzone.drag-over {
+            border-color: #a78bfa;
+            background: #1e1f3a;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.8rem 0;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #c084fc);
+            transition: width 0.2s ease;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            background: #0f1422;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        .watermark {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            font-family: monospace;
+            letter-spacing: 1px;
+            color: #b9c3ff;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .hero h1 { font-size: 2rem; }
+            .card { padding: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="container">
+    <div class="hero">
+        <h1>🔐 CryptoSend</h1>
+        <p>End‑to‑end encrypted P2P file transfer | No server storage | Chunked for large files</p>
+    </div>
+
+    <div class="cards-grid">
+        <!-- left: identity & connection -->
+        <div class="card">
+            <div class="card-title">
+                <span>🆔</span> Your Identity
+            </div>
+            <div class="peer-id-box" id="peerIdBox">
+                <span id="myPeerId">initializing...</span>
+                <button id="copyIdBtn" style="background:#2a3650;">📋 Copy</button>
+            </div>
+            <button id="newIdBtn" style="margin-top: 1rem; width: 100%;">🔄 Generate New ID</button>
+            <div class="status-badge" id="connStatus">⚡ Not connected</div>
+        </div>
+
+        <!-- connect panel -->
+        <div class="card">
+            <div class="card-title">
+                <span>🔌</span> Connect to Peer
+            </div>
+            <input type="text" id="remoteIdInput" placeholder="Paste other peer's ID" autocomplete="off">
+            <button id="connectBtn" class="primary" style="margin-top: 1rem; width: 100%;">🔗 Establish Connection</button>
+            <div id="connFeedback" class="status-badge" style="margin-top: 0.8rem;"></div>
+        </div>
+
+        <!-- send file panel (hidden until connected) -->
+        <div class="card" id="sendCard" style="display: none;">
+            <div class="card-title">
+                <span>📤</span> Send File
+            </div>
+            <div id="dropzone" class="file-dropzone">
+                📁 Click or drag file here
+                <input type="file" id="fileInput" style="display: none;">
+            </div>
+            <div id="filePreview" style="font-size: 0.75rem; margin: 0.5rem 0; color:#b9c3ff;"></div>
+            <div class="progress-bar"><div class="progress-fill" id="sendProgressFill"></div></div>
+            <div id="sendStatus" class="status-badge">No file selected</div>
+            <button id="sendBtn" class="primary" style="width: 100%; margin-top: 0.8rem;" disabled>🚀 Encrypt & Send</button>
+        </div>
+
+        <!-- receive panel (hidden until connected) -->
+        <div class="card" id="receiveCard" style="display: none;">
+            <div class="card-title">
+                <span>📥</span> Incoming Transfer
+            </div>
+            <div id="receiveInfo">Waiting for file...</div>
+            <div class="progress-bar"><div class="progress-fill" id="receiveProgressFill"></div></div>
+            <div id="receiveStatus" class="status-badge">—</div>
+            <button id="downloadBtn" style="display: none; width: 100%; margin-top: 0.8rem;">💾 Decrypt & Save</button>
+        </div>
+    </div>
+    <div class="watermark">✨ সুইট বয় নয়ন ✨ | absolute privacy • WebRTC + AES‑GCM</div>
+</div>
+
+<script>
+    // ---------- DOM elements ----------
+    const myPeerIdSpan = document.getElementById('myPeerId');
+    const copyIdBtn = document.getElementById('copyIdBtn');
+    const newIdBtn = document.getElementById('newIdBtn');
+    const remoteIdInput = document.getElementById('remoteIdInput');
+    const connectBtn = document.getElementById('connectBtn');
+    const connStatusSpan = document.getElementById('connStatus');
+    const connFeedback = document.getElementById('connFeedback');
+    const sendCard = document.getElementById('sendCard');
+    const receiveCard = document.getElementById('receiveCard');
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const filePreview = document.getElementById('filePreview');
+    const sendBtn = document.getElementById('sendBtn');
+    const sendProgressFill = document.getElementById('sendProgressFill');
+    const sendStatus = document.getElementById('sendStatus');
+    const receiveInfo = document.getElementById('receiveInfo');
+    const receiveProgressFill = document.getElementById('receiveProgressFill');
+    const receiveStatus = document.getElementById('receiveStatus');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // ---------- globals ----------
+    let peer = null;
+    let currentConn = null;          // active data connection
+    let myId = null;
+
+    // transfer state
+    let activeTransferId = null;
+    let incomingChunks = [];
+    let incomingMeta = null;          // { fileName, fileSize, totalChunks, key, iv, transferId }
+    let incomingChunkCount = 0;
+    let outgoingFileBuffer = null;    // encrypted buffer ready to send
+    let outgoingMeta = null;
+
+    // chunk size: 16KB (safe for WebRTC)
+    const CHUNK_SIZE = 16 * 1024;
+
+    // ---------- Helper: generate random transfer ID ----------
+    function generateTransferId() {
+        return Math.random().toString(36).substring(2) + Date.now().toString(36);
+    }
+
+    // ---------- PeerJS initialization ----------
+    function initPeer(customId = null) {
+        if (peer) {
+            peer.destroy();
+        }
+        const id = customId || ('user_' + Math.random().toString(36).substring(2, 10));
+        peer = new Peer(id, {
+            debug: 0,
+            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+        });
+
+        peer.on('open', (id) => {
+            myId = id;
+            myPeerIdSpan.innerText = id;
+            connStatusSpan.innerHTML = '✅ Ready to connect';
+        });
+
+        peer.on('error', (err) => {
+            console.error(err);
+            connStatusSpan.innerHTML = '⚠️ Peer error: ' + err.message;
+        });
+
+        peer.on('connection', (conn) => {
+            setupConnection(conn);
+            connFeedback.innerHTML = '📞 Incoming connection accepted!';
+        });
+    }
+
+    // setup data channel and event handlers
+    function setupConnection(conn) {
+        if (currentConn && currentConn.open) {
+            currentConn.close();
+        }
+        currentConn = conn;
+        // reset UI
+        sendCard.style.display = 'block';
+        receiveCard.style.display = 'block';
+        resetSendUI();
+        resetReceiveUI();
+
+        conn.on('open', () => {
+            connStatusSpan.innerHTML = '🔗 Connected to ' + conn.peer;
+            connFeedback.innerHTML = '✅ Connected! You can send files.';
+            sendBtn.disabled = false;
+        });
+
+        conn.on('data', async (data) => {
+            await handleIncomingData(data);
+        });
+
+        conn.on('close', () => {
+            connStatusSpan.innerHTML = '⚠️ Connection closed';
+            sendCard.style.display = 'none';
+            receiveCard.style.display = 'none';
+            currentConn = null;
+        });
+    }
+
+    // ---------- handle all protocol messages ----------
+    async function handleIncomingData(msg) {
+        if (!msg.type) return;
+        switch (msg.type) {
+            case 'fileStart':
+                // start receiving new file
+                resetReceiveUI();
+                incomingMeta = {
+                    fileName: msg.fileName,
+                    fileSize: msg.fileSize,
+                    totalChunks: msg.totalChunks,
+                    key: new Uint8Array(msg.key),
+                    iv: new Uint8Array(msg.iv),
+                    transferId: msg.transferId
+                };
+                activeTransferId = msg.transferId;
+                incomingChunks = new Array(msg.totalChunks);
+                incomingChunkCount = 0;
+                receiveInfo.innerText = `📄 Receiving: ${msg.fileName} (${(msg.fileSize / 1024 / 1024).toFixed(2)} MB)`;
+                receiveStatus.innerText = `0 / ${msg.totalChunks} chunks`;
+                receiveProgressFill.style.width = '0%';
+                break;
+
+            case 'fileChunk':
+                if (activeTransferId === msg.transferId && incomingMeta) {
+                    incomingChunks[msg.chunkIndex] = new Uint8Array(msg.data);
+                    incomingChunkCount++;
+                    const percent = (incomingChunkCount / incomingMeta.totalChunks) * 100;
+                    receiveProgressFill.style.width = percent + '%';
+                    receiveStatus.innerText = `${incomingChunkCount} / ${incomingMeta.totalChunks} chunks`;
+                    if (incomingChunkCount === incomingMeta.totalChunks) {
+                        // all chunks received -> reassemble and decrypt
+                        await reassembleAndDecrypt();
+                    }
+                }
+                break;
+
+            case 'fileEnd':
+                // optional final ack, not needed for basic
+                break;
+        }
+    }
+
+    // reassemble encrypted buffer, decrypt, trigger download
+    async function reassembleAndDecrypt() {
+        if (!incomingMeta) return;
+        receiveStatus.innerText = 'Reassembling & decrypting...';
+        // calculate total length
+        let totalLen = 0;
+        for (let i = 0; i < incomingChunks.length; i++) totalLen += incomingChunks[i].length;
+        const encryptedBuffer = new Uint8Array(totalLen);
+        let offset = 0;
+        for (let i = 0; i < incomingChunks.length; i++) {
+            encryptedBuffer.set(incomingChunks[i], offset);
+            offset += incomingChunks[i].length;
+        }
+
+        try {
+            const cryptoKey = await window.crypto.subtle.importKey(
+                'raw',
+                incomingMeta.key,
+                { name: 'AES-GCM' },
+                false,
+                ['decrypt']
+            );
+            const decrypted = await window.crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: incomingMeta.iv },
+                cryptoKey,
+                encryptedBuffer
+            );
+            const blob = new Blob([decrypted], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = incomingMeta.fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                receiveInfo.innerText = `✅ File saved: ${incomingMeta.fileName}`;
+                downloadBtn.style.display = 'none';
+                resetReceiveUI();
+            };
+            downloadBtn.style.display = 'block';
+            receiveInfo.innerText = `✨ Ready to download: ${incomingMeta.fileName}`;
+            receiveStatus.innerText = 'Decryption complete.';
+        } catch (e) {
+            console.error(e);
+            receiveInfo.innerText = '❌ Decryption failed';
+            receiveStatus.innerText = 'Error: ' + e.message;
+        }
+    }
+
+    // ---------- sending side: encrypt file + chunked send ----------
+    async function encryptAndSendFile(file) {
+        if (!currentConn || !currentConn.open) {
+            sendStatus.innerText = '❌ Not connected';
+            return;
+        }
+        sendStatus.innerText = 'Reading file...';
+        const fileBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(fileBuffer);
+
+        // generate AES key and IV
+        const key = await window.crypto.subtle.generateKey(
+            { name: 'AES-GCM', length: 256 },
+            true,
+            ['encrypt', 'decrypt']
+        );
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+        sendStatus.innerText = 'Encrypting (AES-256-GCM)...';
+        const encrypted = await window.crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            data
+        );
+        const encryptedData = new Uint8Array(encrypted);
+        const rawKey = await window.crypto.subtle.exportKey('raw', key);
+        const keyArray = new Uint8Array(rawKey);
+
+        const totalChunks = Math.ceil(encryptedData.length / CHUNK_SIZE);
+        const transferId = generateTransferId();
+
+        // send metadata first
+        currentConn.send({
+            type: 'fileStart',
+            fileName: file.name,
+            fileSize: encryptedData.length,
+            totalChunks: totalChunks,
+            key: Array.from(keyArray),
+            iv: Array.from(iv),
+            transferId: transferId
+        });
+
+        sendStatus.innerText = `Sending ${totalChunks} chunks...`;
+        sendProgressFill.style.width = '0%';
+
+        // send chunks one by one (order is preserved)
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, encryptedData.length);
+            const chunk = encryptedData.slice(start, end);
+            currentConn.send({
+                type: 'fileChunk',
+                transferId: transferId,
+                chunkIndex: i,
+                data: Array.from(chunk)
+            });
+            const percent = ((i + 1) / totalChunks) * 100;
+            sendProgressFill.style.width = percent + '%';
+            sendStatus.innerText = `Sent ${i+1}/${totalChunks} chunks`;
+            // small delay to avoid flooding? not needed, but keep event loop
+            await new Promise(r => setTimeout(r, 5));
+        }
+
+        currentConn.send({ type: 'fileEnd', transferId: transferId });
+        sendStatus.innerText = '✅ Transfer complete!';
+        setTimeout(() => sendStatus.innerText = 'Ready', 2000);
+    }
+
+    // ---------- UI helpers ----------
+    function resetSendUI() {
+        sendProgressFill.style.width = '0%';
+        sendStatus.innerText = 'No file selected';
+        sendBtn.disabled = true;
+        filePreview.innerText = '';
+        if (fileInput) fileInput.value = '';
+    }
+
+    function resetReceiveUI() {
+        receiveInfo.innerText = 'Waiting for file...';
+        receiveProgressFill.style.width = '0%';
+        receiveStatus.innerText = '—';
+        downloadBtn.style.display = 'none';
+        incomingChunks = [];
+        incomingMeta = null;
+        activeTransferId = null;
+        incomingChunkCount = 0;
+    }
+
+    // drag & drop handling
+    function setupDragDrop() {
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleFileSelected(files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFileSelected(e.target.files[0]);
+        });
+    }
+
+    function handleFileSelected(file) {
+        if (!file) return;
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        filePreview.innerText = `📁 ${file.name} (${sizeMB} MB)`;
+        sendBtn.disabled = false;
+        window.selectedFile = file;
+    }
+
+    // ---------- event listeners ----------
+    copyIdBtn.addEventListener('click', () => {
+        if (myId) {
+            navigator.clipboard.writeText(myId);
+            copyIdBtn.innerText = '✓ Copied!';
+            setTimeout(() => copyIdBtn.innerText = '📋 Copy', 1500);
+        }
+    });
+
+    newIdBtn.addEventListener('click', () => {
+        initPeer();
+        if (currentConn) currentConn.close();
+        currentConn = null;
+        sendCard.style.display = 'none';
+        receiveCard.style.display = 'none';
+    });
+
+    connectBtn.addEventListener('click', () => {
+        const remoteId = remoteIdInput.value.trim();
+        if (!remoteId) {
+            connFeedback.innerHTML = '❌ Enter a valid Peer ID';
+            return;
+        }
+        if (currentConn) currentConn.close();
+        const conn = peer.connect(remoteId, { reliable: true });
+        setupConnection(conn);
+        connFeedback.innerHTML = `⏳ Connecting to ${remoteId} ...`;
+    });
+
+    sendBtn.addEventListener('click', async () => {
+        if (!window.selectedFile) {
+            sendStatus.innerText = 'Please select a file first';
+            return;
+        }
+        if (!currentConn || !currentConn.open) {
+            sendStatus.innerText = 'Not connected to any peer';
+            return;
+        }
+        sendBtn.disabled = true;
+        await encryptAndSendFile(window.selectedFile);
+        sendBtn.disabled = false;
+        window.selectedFile = null;
+        fileInput.value = '';
+        filePreview.innerText = '';
+    });
+
+    // start everything
+    initPeer();
+    setupDragDrop();
+</script>
+</body>
+</html>
