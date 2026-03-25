@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>StableSend | ACK-based P2P File Transfer</title>
+    <title>CryptoSend Pro | Fast & Stable P2P File Transfer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
@@ -49,8 +49,8 @@
 <body>
 <div class="container">
     <div class="hero">
-        <h1>📦 StableSend</h1>
-        <p>ACK‑based • Multiple files • Encrypted P2P • No hang</p>
+        <h1>⚡ CryptoSend Pro</h1>
+        <p>Ultra‑fast • Encrypted P2P • Multiple files • Backpressure control</p>
     </div>
 
     <div class="cards-grid">
@@ -93,10 +93,9 @@
             <div id="receiveQueue" style="font-size:0.7rem; margin-top:0.5rem;"></div>
             <div class="progress-bar"><div class="progress-fill" id="receiveProgressFill"></div></div>
             <div id="receiveStatus" class="status-badge">—</div>
-            <button id="downloadBtn" style="display:none; width:100%; margin-top:0.8rem;">💾 Decrypt & Save</button>
         </div>
     </div>
-    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 128KB chunks • ACK flow control • Multi‑file queue</div>
+    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 256KB chunks • Backpressure • Multi‑file queue</div>
 </div>
 
 <script>
@@ -121,29 +120,30 @@
     const receiveQueue = document.getElementById('receiveQueue');
     const receiveProgressFill = document.getElementById('receiveProgressFill');
     const receiveStatus = document.getElementById('receiveStatus');
-    const downloadBtn = document.getElementById('downloadBtn');
     const qrContainer = document.getElementById('qrContainer');
 
     let peer = null;
     let currentConn = null;
     let myId = null;
 
-    // For sending multiple files
+    // Sending queue
     let selectedFiles = [];
     let isSending = false;
 
-    // For receiving: store incomplete transfers
+    // Receive side: store incoming transfers
     let incomingTransfers = new Map(); // transferId -> { meta, chunks, chunkCount, totalChunks }
 
-    // Chunk size: 128KB (stable)
-    const CHUNK_SIZE = 128 * 1024;
+    // Chunk size: 256KB (fast and safe with backpressure)
+    const CHUNK_SIZE = 256 * 1024;
+    // Backpressure threshold: wait if bufferedAmount > 1.5MB
+    const BUFFER_THRESHOLD = 1.5 * 1024 * 1024;
 
     function genTransferId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
 
     // ---------- PeerJS ----------
     function initPeer(customId = null) {
         if (peer) peer.destroy();
-        const id = customId || ('stable_' + Math.random().toString(36).substring(2, 10));
+        const id = customId || ('pro_' + Math.random().toString(36).substring(2, 10));
         peer = new Peer(id, {
             debug: 0,
             config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
@@ -205,7 +205,7 @@
         });
     }
 
-    // Handle incoming messages (fileStart, fileChunk, ack)
+    // Handle incoming messages
     async function handleIncoming(msg) {
         if (!msg.type) return;
         switch (msg.type) {
@@ -237,14 +237,6 @@
                     const percent = (transfer.chunkCount / transfer.meta.totalChunks) * 100;
                     receiveProgressFill.style.width = percent + '%';
                     receiveStatus.innerText = `${transfer.chunkCount} / ${transfer.meta.totalChunks} chunks`;
-                    
-                    // Send ACK for this chunk
-                    currentConn.send({
-                        type: 'chunkAck',
-                        transferId: msg.transferId,
-                        chunkIndex: msg.chunkIndex
-                    });
-
                     if (transfer.chunkCount === transfer.meta.totalChunks) {
                         await reassembleAndDecrypt(transfer);
                         incomingTransfers.delete(msg.transferId);
@@ -258,15 +250,6 @@
                             }
                         }
                     }
-                }
-                break;
-
-            case 'chunkAck':
-                // Handle ACK: resolve pending promise in sender
-                if (pendingAcks.has(msg.transferId) && pendingAcks.get(msg.transferId).has(msg.chunkIndex)) {
-                    const resolver = pendingAcks.get(msg.transferId).get(msg.chunkIndex);
-                    if (resolver) resolver();
-                    pendingAcks.get(msg.transferId).delete(msg.chunkIndex);
                 }
                 break;
         }
@@ -322,19 +305,23 @@
         }
     }
 
-    // Sender side with ACK per chunk
-    let pendingAcks = new Map(); // transferId -> Map(chunkIndex -> resolver)
-
-    function waitForAck(transferId, chunkIndex, timeout = 10000) {
+    // Send with backpressure (wait for buffer to drain)
+    async function sendWithBackpressure(conn, chunkData, transferId, chunkIndex) {
         return new Promise((resolve, reject) => {
-            if (!pendingAcks.has(transferId)) pendingAcks.set(transferId, new Map());
-            pendingAcks.get(transferId).set(chunkIndex, resolve);
-            setTimeout(() => {
-                if (pendingAcks.has(transferId) && pendingAcks.get(transferId).has(chunkIndex)) {
-                    pendingAcks.get(transferId).delete(chunkIndex);
-                    reject(new Error('ACK timeout'));
+            const sendChunk = () => {
+                if (conn.bufferedAmount < BUFFER_THRESHOLD) {
+                    conn.send({
+                        type: 'fileChunk',
+                        transferId: transferId,
+                        chunkIndex: chunkIndex,
+                        data: Array.from(chunkData)
+                    });
+                    resolve();
+                } else {
+                    setTimeout(sendChunk, 10);
                 }
-            }, timeout);
+            };
+            sendChunk();
         });
     }
 
@@ -354,7 +341,7 @@
         const totalChunks = Math.ceil(encryptedData.length / CHUNK_SIZE);
         const transferId = genTransferId();
 
-        // Send fileStart
+        // Send metadata
         currentConn.send({
             type: 'fileStart',
             fileName: file.name,
@@ -372,23 +359,13 @@
             const start = i * CHUNK_SIZE;
             const end = Math.min(start + CHUNK_SIZE, encryptedData.length);
             const chunk = encryptedData.slice(start, end);
-            // Send chunk
-            currentConn.send({
-                type: 'fileChunk',
-                transferId: transferId,
-                chunkIndex: i,
-                data: Array.from(chunk)
-            });
-            // Wait for ACK
-            await waitForAck(transferId, i);
+            await sendWithBackpressure(currentConn, chunk, transferId, i);
             const percent = ((i + 1) / totalChunks) * 100;
             sendProgressFill.style.width = percent + '%';
             sendStatus.innerText = `${file.name} ${i+1}/${totalChunks} chunks (${Math.round(percent)}%)`;
         }
-        // Clean up pending acks for this transfer
-        pendingAcks.delete(transferId);
         sendStatus.innerText = `✅ ${file.name} sent!`;
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 100)); // small gap between files
     }
 
     async function sendAllFiles() {
@@ -473,9 +450,7 @@
         receiveQueue.innerHTML = '';
         receiveProgressFill.style.width = '0%';
         receiveStatus.innerText = '—';
-        downloadBtn.style.display = 'none';
         incomingTransfers.clear();
-        pendingAcks.clear();
     }
 
     // Drag & drop for multiple files
@@ -495,7 +470,7 @@
         });
     }
 
-    // QR scanner
+    // QR scanner (robust)
     let html5QrCode = null;
     function startQrScanner() {
         const overlay = document.createElement('div');
