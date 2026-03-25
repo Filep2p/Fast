@@ -2,105 +2,76 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>CryptoSend | P2P Encrypted File Transfer</title>
-    <!-- Google Fonts & PeerJS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>HyperCrypt | Ultimate Speed P2P File Transfer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 10% 20%, #0b0e1a, #03050c);
+            background: radial-gradient(circle at 20% 30%, #0b0e1a, #03050c);
             min-height: 100vh;
-            padding: 2rem 1rem;
-            color: #edf2ff;
+            padding: clamp(0.8rem, 4vw, 2rem);
+            color: #eef5ff;
         }
-
-        /* animated background glow */
-        .bg-glow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            background: radial-gradient(circle at 30% 40%, rgba(79, 70, 229, 0.08), transparent 70%);
-        }
-
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
-            position: relative;
-            z-index: 2;
         }
-
-        /* header */
         .hero {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
         .hero h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
+            font-size: clamp(1.8rem, 6vw, 2.8rem);
             background: linear-gradient(135deg, #c084fc, #60a5fa, #f472b6);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            letter-spacing: -0.5px;
-            animation: fadeSlideUp 0.8s ease-out;
+            font-weight: 700;
         }
         .hero p {
             color: #94a3b8;
-            margin-top: 0.5rem;
-            font-size: 1rem;
+            font-size: clamp(0.8rem, 3vw, 1rem);
         }
-
-        /* cards grid */
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.8rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
-
         .card {
-            background: rgba(15, 20, 35, 0.65);
+            background: rgba(15, 20, 35, 0.7);
             backdrop-filter: blur(12px);
-            border-radius: 2rem;
-            border: 1px solid rgba(96, 165, 250, 0.2);
-            padding: 1.5rem;
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+            border-radius: 1.8rem;
+            border: 1px solid rgba(96, 165, 250, 0.25);
+            padding: 1.4rem;
+            transition: transform 0.2s, border-color 0.2s;
         }
         .card:hover {
-            border-color: rgba(96, 165, 250, 0.5);
-            transform: translateY(-4px);
-            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.6);
+            border-color: #818cf8;
+            transform: translateY(-3px);
         }
-
         .card-title {
-            font-size: 1.4rem;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 1.2rem;
-            color: #e2e8ff;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
-
         .peer-id-box {
             background: #0a0e1c;
-            border-radius: 1.2rem;
-            padding: 0.8rem 1rem;
-            font-family: 'Monaco', monospace;
-            font-size: 0.85rem;
+            border-radius: 1rem;
+            padding: 0.7rem;
+            font-family: monospace;
             word-break: break-all;
             border: 1px solid #2d3a5e;
             display: flex;
@@ -109,36 +80,29 @@
             gap: 0.5rem;
             flex-wrap: wrap;
         }
-
         button {
             background: linear-gradient(95deg, #2d3a6e, #1e2a4a);
             border: none;
             padding: 0.6rem 1.2rem;
             border-radius: 2rem;
             font-weight: 600;
-            font-size: 0.85rem;
-            color: #f0f3ff;
+            color: white;
             cursor: pointer;
-            transition: 0.2s ease;
+            transition: all 0.2s;
+            font-family: inherit;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            font-family: inherit;
-            backdrop-filter: blur(4px);
+            gap: 0.5rem;
+            font-size: clamp(0.75rem, 3vw, 0.9rem);
         }
         button.primary {
             background: linear-gradient(95deg, #4f46e5, #7c3aed);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
         }
         button.primary:hover {
             transform: scale(0.98);
-            background: linear-gradient(95deg, #6366f1, #8b5cf6);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 6px 16px rgba(79,70,229,0.4);
         }
-        button:active {
-            transform: scale(0.96);
-        }
-
         input, .file-dropzone {
             background: #0a0e1c;
             border: 1px solid #2d3a5e;
@@ -147,135 +111,131 @@
             width: 100%;
             color: white;
             font-family: inherit;
-            transition: 0.2s;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
         }
-        input:focus {
-            outline: none;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
-        }
-
         .file-dropzone {
             text-align: center;
             cursor: pointer;
-            margin-top: 0.5rem;
             transition: 0.2s;
         }
         .file-dropzone.drag-over {
             border-color: #a78bfa;
             background: #1e1f3a;
         }
-
         .progress-bar {
             width: 100%;
             height: 6px;
             background: #1e293b;
             border-radius: 10px;
             overflow: hidden;
-            margin: 0.8rem 0;
+            margin: 0.6rem 0;
         }
         .progress-fill {
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, #60a5fa, #c084fc);
-            transition: width 0.2s ease;
+            transition: width 0.2s;
         }
-
         .status-badge {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             background: #0f1422;
             padding: 0.2rem 0.8rem;
             border-radius: 20px;
             display: inline-block;
             margin-top: 0.5rem;
         }
-
+        .qr-area {
+            display: flex;
+            justify-content: center;
+            margin: 0.8rem 0;
+        }
+        canvas#qrCanvas {
+            background: white;
+            padding: 8px;
+            border-radius: 20px;
+            width: 140px;
+            height: 140px;
+        }
         .watermark {
             text-align: center;
-            margin-top: 3rem;
-            font-size: 0.8rem;
+            margin-top: 2rem;
+            font-size: 0.75rem;
             opacity: 0.6;
             font-family: monospace;
-            letter-spacing: 1px;
             color: #b9c3ff;
         }
-
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .flex-row {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            align-items: center;
         }
-
         @media (max-width: 700px) {
-            .hero h1 { font-size: 2rem; }
-            .card { padding: 1.2rem; }
+            .flex-row { flex-direction: column; }
+            .flex-row button { width: 100%; }
+        }
+        /* scanner modal responsive */
+        #qr-reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
-<div class="bg-glow"></div>
 <div class="container">
     <div class="hero">
-        <h1>🔐 CryptoSend</h1>
-        <p>End‑to‑end encrypted P2P file transfer | No server storage | Chunked for large files</p>
+        <h1>⚡ HyperCrypt</h1>
+        <p>Maximum speed • Encrypted P2P • QR connect • No limits</p>
     </div>
 
     <div class="cards-grid">
-        <!-- left: identity & connection -->
+        <!-- Identity + QR -->
         <div class="card">
-            <div class="card-title">
-                <span>🆔</span> Your Identity
+            <div class="card-title">🆔 Your ID & QR</div>
+            <div class="peer-id-box">
+                <span id="myPeerId">loading...</span>
+                <button id="copyIdBtn">📋 Copy</button>
             </div>
-            <div class="peer-id-box" id="peerIdBox">
-                <span id="myPeerId">initializing...</span>
-                <button id="copyIdBtn" style="background:#2a3650;">📋 Copy</button>
-            </div>
-            <button id="newIdBtn" style="margin-top: 1rem; width: 100%;">🔄 Generate New ID</button>
+            <div class="qr-area" id="qrContainer"></div>
+            <button id="newIdBtn" style="width:100%;">🔄 New Identity</button>
             <div class="status-badge" id="connStatus">⚡ Not connected</div>
         </div>
 
-        <!-- connect panel -->
+        <!-- Connect: manual + QR scanner -->
         <div class="card">
-            <div class="card-title">
-                <span>🔌</span> Connect to Peer
+            <div class="card-title">🔌 Connect to Peer</div>
+            <div class="flex-row">
+                <input type="text" id="remoteIdInput" placeholder="Paste Peer ID" style="flex:2;">
+                <button id="connectBtn" class="primary">Connect</button>
             </div>
-            <input type="text" id="remoteIdInput" placeholder="Paste other peer's ID" autocomplete="off">
-            <button id="connectBtn" class="primary" style="margin-top: 1rem; width: 100%;">🔗 Establish Connection</button>
-            <div id="connFeedback" class="status-badge" style="margin-top: 0.8rem;"></div>
+            <button id="scanQrBtn" style="width:100%; margin-top:0.8rem;">📷 Scan QR Code</button>
+            <div id="connFeedback" class="status-badge"></div>
         </div>
 
-        <!-- send file panel (hidden until connected) -->
+        <!-- Send file panel -->
         <div class="card" id="sendCard" style="display: none;">
-            <div class="card-title">
-                <span>📤</span> Send File
-            </div>
+            <div class="card-title">📤 Send File</div>
             <div id="dropzone" class="file-dropzone">
                 📁 Click or drag file here
-                <input type="file" id="fileInput" style="display: none;">
+                <input type="file" id="fileInput" style="display:none;">
             </div>
-            <div id="filePreview" style="font-size: 0.75rem; margin: 0.5rem 0; color:#b9c3ff;"></div>
+            <div id="filePreview" style="font-size:0.75rem; margin:0.5rem 0;"></div>
             <div class="progress-bar"><div class="progress-fill" id="sendProgressFill"></div></div>
             <div id="sendStatus" class="status-badge">No file selected</div>
-            <button id="sendBtn" class="primary" style="width: 100%; margin-top: 0.8rem;" disabled>🚀 Encrypt & Send</button>
+            <button id="sendBtn" class="primary" style="width:100%; margin-top:0.8rem;" disabled>🚀 Encrypt & Send</button>
         </div>
 
-        <!-- receive panel (hidden until connected) -->
+        <!-- Receive panel -->
         <div class="card" id="receiveCard" style="display: none;">
-            <div class="card-title">
-                <span>📥</span> Incoming Transfer
-            </div>
+            <div class="card-title">📥 Incoming Transfer</div>
             <div id="receiveInfo">Waiting for file...</div>
             <div class="progress-bar"><div class="progress-fill" id="receiveProgressFill"></div></div>
             <div id="receiveStatus" class="status-badge">—</div>
-            <button id="downloadBtn" style="display: none; width: 100%; margin-top: 0.8rem;">💾 Decrypt & Save</button>
+            <button id="downloadBtn" style="display:none; width:100%; margin-top:0.8rem;">💾 Decrypt & Save</button>
         </div>
     </div>
-    <div class="watermark">✨ সুইট বয় নয়ন ✨ | absolute privacy • WebRTC + AES‑GCM</div>
+    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 1MB chunks • AES‑256‑GCM • Ultra‑fast P2P</div>
 </div>
 
 <script>
@@ -285,6 +245,7 @@
     const newIdBtn = document.getElementById('newIdBtn');
     const remoteIdInput = document.getElementById('remoteIdInput');
     const connectBtn = document.getElementById('connectBtn');
+    const scanQrBtn = document.getElementById('scanQrBtn');
     const connStatusSpan = document.getElementById('connStatus');
     const connFeedback = document.getElementById('connFeedback');
     const sendCard = document.getElementById('sendCard');
@@ -299,34 +260,29 @@
     const receiveProgressFill = document.getElementById('receiveProgressFill');
     const receiveStatus = document.getElementById('receiveStatus');
     const downloadBtn = document.getElementById('downloadBtn');
+    const qrContainer = document.getElementById('qrContainer');
 
     // ---------- globals ----------
     let peer = null;
-    let currentConn = null;          // active data connection
+    let currentConn = null;
     let myId = null;
 
     // transfer state
-    let activeTransferId = null;
+    let incomingMeta = null;
     let incomingChunks = [];
-    let incomingMeta = null;          // { fileName, fileSize, totalChunks, key, iv, transferId }
     let incomingChunkCount = 0;
-    let outgoingFileBuffer = null;    // encrypted buffer ready to send
-    let outgoingMeta = null;
+    let activeTransferId = null;
 
-    // chunk size: 16KB (safe for WebRTC)
-    const CHUNK_SIZE = 16 * 1024;
+    // CHUNK SIZE: 1MB (1048576 bytes) — maximum safe for WebRTC
+    const CHUNK_SIZE = 1024 * 1024;  // 1 MB chunks = ultra speed
 
-    // ---------- Helper: generate random transfer ID ----------
-    function generateTransferId() {
-        return Math.random().toString(36).substring(2) + Date.now().toString(36);
-    }
+    // helper: generate transfer ID
+    function genTransferId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
 
-    // ---------- PeerJS initialization ----------
+    // ---------- PeerJS init ----------
     function initPeer(customId = null) {
-        if (peer) {
-            peer.destroy();
-        }
-        const id = customId || ('user_' + Math.random().toString(36).substring(2, 10));
+        if (peer) peer.destroy();
+        const id = customId || ('hyper_' + Math.random().toString(36).substring(2, 10));
         peer = new Peer(id, {
             debug: 0,
             config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
@@ -335,40 +291,51 @@
         peer.on('open', (id) => {
             myId = id;
             myPeerIdSpan.innerText = id;
-            connStatusSpan.innerHTML = '✅ Ready to connect';
+            connStatusSpan.innerHTML = '✅ Ready';
+            generateQR(id);
         });
 
         peer.on('error', (err) => {
             console.error(err);
-            connStatusSpan.innerHTML = '⚠️ Peer error: ' + err.message;
+            connStatusSpan.innerHTML = '⚠️ Error: ' + err.message;
         });
 
         peer.on('connection', (conn) => {
             setupConnection(conn);
-            connFeedback.innerHTML = '📞 Incoming connection accepted!';
+            connFeedback.innerHTML = '📞 Incoming connection!';
         });
     }
 
-    // setup data channel and event handlers
+    // generate QR using QRious
+    function generateQR(text) {
+        qrContainer.innerHTML = '';
+        const qr = new QRious({
+            element: document.createElement('canvas'),
+            value: text,
+            size: 140,
+            background: 'white',
+            foreground: 'black'
+        });
+        qrContainer.appendChild(qr.canvas);
+    }
+
+    // setup data channel (optimized for speed)
     function setupConnection(conn) {
-        if (currentConn && currentConn.open) {
-            currentConn.close();
-        }
+        if (currentConn && currentConn.open) currentConn.close();
         currentConn = conn;
-        // reset UI
         sendCard.style.display = 'block';
         receiveCard.style.display = 'block';
         resetSendUI();
         resetReceiveUI();
 
         conn.on('open', () => {
-            connStatusSpan.innerHTML = '🔗 Connected to ' + conn.peer;
-            connFeedback.innerHTML = '✅ Connected! You can send files.';
+            connStatusSpan.innerHTML = `🔗 Connected to ${conn.peer}`;
+            connFeedback.innerHTML = '✅ Connected! Ready to send files.';
             sendBtn.disabled = false;
         });
 
         conn.on('data', async (data) => {
-            await handleIncomingData(data);
+            await handleIncoming(data);
         });
 
         conn.on('close', () => {
@@ -379,12 +346,11 @@
         });
     }
 
-    // ---------- handle all protocol messages ----------
-    async function handleIncomingData(msg) {
+    // handle incoming protocol messages
+    async function handleIncoming(msg) {
         if (!msg.type) return;
         switch (msg.type) {
             case 'fileStart':
-                // start receiving new file
                 resetReceiveUI();
                 incomingMeta = {
                     fileName: msg.fileName,
@@ -397,7 +363,7 @@
                 activeTransferId = msg.transferId;
                 incomingChunks = new Array(msg.totalChunks);
                 incomingChunkCount = 0;
-                receiveInfo.innerText = `📄 Receiving: ${msg.fileName} (${(msg.fileSize / 1024 / 1024).toFixed(2)} MB)`;
+                receiveInfo.innerText = `📥 Receiving: ${msg.fileName} (${(msg.fileSize / 1024 / 1024).toFixed(2)} MB)`;
                 receiveStatus.innerText = `0 / ${msg.totalChunks} chunks`;
                 receiveProgressFill.style.width = '0%';
                 break;
@@ -410,44 +376,31 @@
                     receiveProgressFill.style.width = percent + '%';
                     receiveStatus.innerText = `${incomingChunkCount} / ${incomingMeta.totalChunks} chunks`;
                     if (incomingChunkCount === incomingMeta.totalChunks) {
-                        // all chunks received -> reassemble and decrypt
                         await reassembleAndDecrypt();
                     }
                 }
                 break;
-
-            case 'fileEnd':
-                // optional final ack, not needed for basic
-                break;
         }
     }
 
-    // reassemble encrypted buffer, decrypt, trigger download
     async function reassembleAndDecrypt() {
         if (!incomingMeta) return;
         receiveStatus.innerText = 'Reassembling & decrypting...';
-        // calculate total length
+        // merge chunks
         let totalLen = 0;
         for (let i = 0; i < incomingChunks.length; i++) totalLen += incomingChunks[i].length;
-        const encryptedBuffer = new Uint8Array(totalLen);
+        const encrypted = new Uint8Array(totalLen);
         let offset = 0;
         for (let i = 0; i < incomingChunks.length; i++) {
-            encryptedBuffer.set(incomingChunks[i], offset);
+            encrypted.set(incomingChunks[i], offset);
             offset += incomingChunks[i].length;
         }
-
         try {
             const cryptoKey = await window.crypto.subtle.importKey(
-                'raw',
-                incomingMeta.key,
-                { name: 'AES-GCM' },
-                false,
-                ['decrypt']
+                'raw', incomingMeta.key, { name: 'AES-GCM' }, false, ['decrypt']
             );
             const decrypted = await window.crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv: incomingMeta.iv },
-                cryptoKey,
-                encryptedBuffer
+                { name: 'AES-GCM', iv: incomingMeta.iv }, cryptoKey, encrypted
             );
             const blob = new Blob([decrypted], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
@@ -459,12 +412,12 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                receiveInfo.innerText = `✅ File saved: ${incomingMeta.fileName}`;
+                receiveInfo.innerText = `✅ Saved: ${incomingMeta.fileName}`;
                 downloadBtn.style.display = 'none';
                 resetReceiveUI();
             };
             downloadBtn.style.display = 'block';
-            receiveInfo.innerText = `✨ Ready to download: ${incomingMeta.fileName}`;
+            receiveInfo.innerText = `✨ Ready: ${incomingMeta.fileName}`;
             receiveStatus.innerText = 'Decryption complete.';
         } catch (e) {
             console.error(e);
@@ -473,7 +426,7 @@
         }
     }
 
-    // ---------- sending side: encrypt file + chunked send ----------
+    // send file with high-speed chunking
     async function encryptAndSendFile(file) {
         if (!currentConn || !currentConn.open) {
             sendStatus.innerText = '❌ Not connected';
@@ -483,28 +436,18 @@
         const fileBuffer = await file.arrayBuffer();
         const data = new Uint8Array(fileBuffer);
 
-        // generate AES key and IV
-        const key = await window.crypto.subtle.generateKey(
-            { name: 'AES-GCM', length: 256 },
-            true,
-            ['encrypt', 'decrypt']
-        );
+        const key = await window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
-
         sendStatus.innerText = 'Encrypting (AES-256-GCM)...';
-        const encrypted = await window.crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv: iv },
-            key,
-            data
-        );
+        const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
         const encryptedData = new Uint8Array(encrypted);
         const rawKey = await window.crypto.subtle.exportKey('raw', key);
         const keyArray = new Uint8Array(rawKey);
 
         const totalChunks = Math.ceil(encryptedData.length / CHUNK_SIZE);
-        const transferId = generateTransferId();
+        const transferId = genTransferId();
 
-        // send metadata first
+        // send metadata
         currentConn.send({
             type: 'fileStart',
             fileName: file.name,
@@ -515,10 +458,10 @@
             transferId: transferId
         });
 
-        sendStatus.innerText = `Sending ${totalChunks} chunks...`;
+        sendStatus.innerText = `Sending ${totalChunks} chunks (1MB each)...`;
         sendProgressFill.style.width = '0%';
 
-        // send chunks one by one (order is preserved)
+        // send chunks without any delay
         for (let i = 0; i < totalChunks; i++) {
             const start = i * CHUNK_SIZE;
             const end = Math.min(start + CHUNK_SIZE, encryptedData.length);
@@ -531,17 +474,13 @@
             });
             const percent = ((i + 1) / totalChunks) * 100;
             sendProgressFill.style.width = percent + '%';
-            sendStatus.innerText = `Sent ${i+1}/${totalChunks} chunks`;
-            // small delay to avoid flooding? not needed, but keep event loop
-            await new Promise(r => setTimeout(r, 5));
+            sendStatus.innerText = `Sent ${i+1}/${totalChunks} chunks (${Math.round(percent)}%)`;
         }
-
-        currentConn.send({ type: 'fileEnd', transferId: transferId });
         sendStatus.innerText = '✅ Transfer complete!';
         setTimeout(() => sendStatus.innerText = 'Ready', 2000);
     }
 
-    // ---------- UI helpers ----------
+    // UI reset
     function resetSendUI() {
         sendProgressFill.style.width = '0%';
         sendStatus.innerText = 'No file selected';
@@ -549,7 +488,6 @@
         filePreview.innerText = '';
         if (fileInput) fileInput.value = '';
     }
-
     function resetReceiveUI() {
         receiveInfo.innerText = 'Waiting for file...';
         receiveProgressFill.style.width = '0%';
@@ -561,25 +499,20 @@
         incomingChunkCount = 0;
     }
 
-    // drag & drop handling
+    // Drag & drop + file selection
     function setupDragDrop() {
         dropzone.addEventListener('click', () => fileInput.click());
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('drag-over');
-        });
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
         dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) handleFileSelected(files[0]);
+            if (e.dataTransfer.files.length) handleFileSelected(e.dataTransfer.files[0]);
         });
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length) handleFileSelected(e.target.files[0]);
         });
     }
-
     function handleFileSelected(file) {
         if (!file) return;
         const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
@@ -588,44 +521,88 @@
         window.selectedFile = file;
     }
 
-    // ---------- event listeners ----------
-    copyIdBtn.addEventListener('click', () => {
-        if (myId) {
-            navigator.clipboard.writeText(myId);
-            copyIdBtn.innerText = '✓ Copied!';
-            setTimeout(() => copyIdBtn.innerText = '📋 Copy', 1500);
-        }
-    });
+    // QR scanning with robust error handling
+    let html5QrCode = null;
+    function startQrScanner() {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
+        overlay.style.zIndex = '2000';
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.padding = '1rem';
 
-    newIdBtn.addEventListener('click', () => {
-        initPeer();
-        if (currentConn) currentConn.close();
-        currentConn = null;
-        sendCard.style.display = 'none';
-        receiveCard.style.display = 'none';
-    });
+        const scannerDiv = document.createElement('div');
+        scannerDiv.id = 'qr-reader';
+        scannerDiv.style.width = '100%';
+        scannerDiv.style.maxWidth = '450px';
+        scannerDiv.style.backgroundColor = '#000';
+        scannerDiv.style.borderRadius = '24px';
+        scannerDiv.style.overflow = 'hidden';
+        overlay.appendChild(scannerDiv);
 
-    connectBtn.addEventListener('click', () => {
-        const remoteId = remoteIdInput.value.trim();
-        if (!remoteId) {
-            connFeedback.innerHTML = '❌ Enter a valid Peer ID';
-            return;
-        }
+        const closeBtn = document.createElement('button');
+        closeBtn.innerText = '✖ Cancel';
+        closeBtn.style.marginTop = '1rem';
+        closeBtn.style.background = '#ff4d4d';
+        closeBtn.style.border = 'none';
+        closeBtn.style.padding = '0.6rem 1.2rem';
+        closeBtn.style.borderRadius = '2rem';
+        closeBtn.style.color = 'white';
+        closeBtn.style.fontWeight = 'bold';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.addEventListener('click', () => {
+            if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(console.warn);
+            overlay.remove();
+        });
+        overlay.appendChild(closeBtn);
+        document.body.appendChild(overlay);
+
+        html5QrCode = new Html5Qrcode("qr-reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            // success
+            remoteIdInput.value = decodedText;
+            html5QrCode.stop().then(() => {
+                overlay.remove();
+                // auto connect
+                connectToPeer(decodedText);
+            }).catch(console.warn);
+        }, (err) => {
+            // scanning error, ignore for now
+            console.warn(err);
+        }).catch((err) => {
+            console.error('Camera start failed', err);
+            connFeedback.innerHTML = '❌ Camera access failed. Please allow camera permissions and retry.';
+            overlay.remove();
+        });
+    }
+
+    async function connectToPeer(peerId) {
+        if (!peerId) return;
         if (currentConn) currentConn.close();
-        const conn = peer.connect(remoteId, { reliable: true });
+        const conn = peer.connect(peerId, { reliable: true });
         setupConnection(conn);
-        connFeedback.innerHTML = `⏳ Connecting to ${remoteId} ...`;
-    });
+        connFeedback.innerHTML = `⏳ Connecting to ${peerId} ...`;
+    }
 
+    // event listeners
+    copyIdBtn.addEventListener('click', () => {
+        if (myId) { navigator.clipboard.writeText(myId); copyIdBtn.innerText = '✓ Copied!'; setTimeout(() => copyIdBtn.innerText = '📋 Copy', 1500); }
+    });
+    newIdBtn.addEventListener('click', () => { initPeer(); if (currentConn) currentConn.close(); currentConn = null; sendCard.style.display = 'none'; receiveCard.style.display = 'none'; });
+    connectBtn.addEventListener('click', () => { const rid = remoteIdInput.value.trim(); if (rid) connectToPeer(rid); else connFeedback.innerHTML = '❌ Enter ID'; });
+    scanQrBtn.addEventListener('click', startQrScanner);
     sendBtn.addEventListener('click', async () => {
-        if (!window.selectedFile) {
-            sendStatus.innerText = 'Please select a file first';
-            return;
-        }
-        if (!currentConn || !currentConn.open) {
-            sendStatus.innerText = 'Not connected to any peer';
-            return;
-        }
+        if (!window.selectedFile) { sendStatus.innerText = 'Select a file first'; return; }
+        if (!currentConn || !currentConn.open) { sendStatus.innerText = 'Not connected'; return; }
         sendBtn.disabled = true;
         await encryptAndSendFile(window.selectedFile);
         sendBtn.disabled = false;
@@ -634,7 +611,7 @@
         filePreview.innerText = '';
     });
 
-    // start everything
+    // start
     initPeer();
     setupDragDrop();
 </script>
