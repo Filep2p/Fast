@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>CryptoSend Pro | Fast & Stable P2P File Transfer</title>
+    <title>HyperSend | Stable Fast P2P File Transfer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
@@ -49,8 +49,8 @@
 <body>
 <div class="container">
     <div class="hero">
-        <h1>⚡ CryptoSend Pro</h1>
-        <p>Ultra‑fast • Encrypted P2P • Multiple files • Backpressure control</p>
+        <h1>⚡ HyperSend</h1>
+        <p>Stable • Fast • Multiple files • QR connect • 64KB chunks</p>
     </div>
 
     <div class="cards-grid">
@@ -95,7 +95,7 @@
             <div id="receiveStatus" class="status-badge">—</div>
         </div>
     </div>
-    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 256KB chunks • Backpressure • Multi‑file queue</div>
+    <div class="watermark">✨ সুইট বয় নয়ন ✨ | 64KB chunks • Backpressure • Multi‑file</div>
 </div>
 
 <script>
@@ -133,17 +133,17 @@
     // Receive side: store incoming transfers
     let incomingTransfers = new Map(); // transferId -> { meta, chunks, chunkCount, totalChunks }
 
-    // Chunk size: 256KB (fast and safe with backpressure)
-    const CHUNK_SIZE = 256 * 1024;
-    // Backpressure threshold: wait if bufferedAmount > 1.5MB
-    const BUFFER_THRESHOLD = 1.5 * 1024 * 1024;
+    // Chunk size: 64KB (stable & fast)
+    const CHUNK_SIZE = 64 * 1024;
+    // Backpressure threshold: wait if bufferedAmount > 1MB
+    const BUFFER_THRESHOLD = 1 * 1024 * 1024;
 
     function genTransferId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
 
     // ---------- PeerJS ----------
     function initPeer(customId = null) {
         if (peer) peer.destroy();
-        const id = customId || ('pro_' + Math.random().toString(36).substring(2, 10));
+        const id = customId || ('hyper_' + Math.random().toString(36).substring(2, 10));
         peer = new Peer(id, {
             debug: 0,
             config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
